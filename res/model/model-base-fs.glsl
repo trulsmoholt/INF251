@@ -21,17 +21,17 @@ out vec4 fragColor;
 
 void main()
 {
-	float i = 0.8;
+	float i = 0.5;
 	float ambient = 1;
-	float diffuse = 0.2;
+	float diffuse = 0.4;
 	float specular = 0.01;
 	float shininess = 0.01;
 
 	vec3 L = worldLightPosition - fragment.position;
-	vec3 R = 2*dot(L,fragment.normal)*fragment.normal-L;
-	vec3 V = worldCameraPosition - fragment.position;
+	vec3 R = 2*dot(L,-fragment.normal)*-fragment.normal-L;
+	vec3 V = worldCameraPosition + fragment.position;
 
-	float light = ambient*i + diffuse*dot(L,fragment.normal)*i + specular*pow(dot(R,V),shininess)*i;
+	float light = ambient*i + diffuse*dot(L,-fragment.normal)*i + specular*pow(dot(R,V),shininess)*i;
 
 
 	vec4 result = vec4(light, light, light, 1.0);
