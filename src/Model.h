@@ -72,7 +72,6 @@ namespace minity
 	private:
 
 		std::string m_filename;
-		
 		std::vector < Group > m_groups;
 		std::vector < Vertex > m_vertices;
 		std::vector < glm::uint > m_indices;

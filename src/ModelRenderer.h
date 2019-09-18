@@ -31,7 +31,7 @@ namespace minity
 		virtual void display();
 
 	private:
-
+		std::vector <glm::vec3> m_lights;
 		std::unique_ptr<globjects::VertexArray> m_lightArray = std::make_unique<globjects::VertexArray>();
 		std::unique_ptr<globjects::Buffer> m_lightVertices = std::make_unique<globjects::Buffer>();
 	};

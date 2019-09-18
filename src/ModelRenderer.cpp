@@ -22,7 +22,8 @@ using namespace globjects;
 
 ModelRenderer::ModelRenderer(Viewer* viewer) : Renderer(viewer)
 {
-	m_lightVertices->setStorage(std::array<vec3, 1>({ vec3(0.0f) }), GL_NONE_BIT);
+	m_lights = { vec3(0.0f), vec3(0.5f),vec3(0.0f,0.25f,-0.3f) };
+	m_lightVertices->setStorage(m_lights, GL_NONE_BIT);
 	auto lightVertexBinding = m_lightArray->binding(0);
 	lightVertexBinding->setBuffer(m_lightVertices.get(), 0, sizeof(vec3));
 	lightVertexBinding->setFormat(3, GL_FLOAT);
@@ -74,13 +75,15 @@ void ModelRenderer::display()
 
 	static std::vector<bool> groupEnabled(groups.size(), true);
 	static bool wireframeEnabled = true;
-	static bool lightSourceEnabled = true;
+	static bool lightSourceEnabled[3] = { false,true,false };
 	static vec4 wireframeLineColor = vec4(1.0f);
 
 	if (ImGui::BeginMenu("Model"))
 	{
 		ImGui::Checkbox("Wireframe Enabled", &wireframeEnabled);
-		ImGui::Checkbox("Light Source Enabled", &lightSourceEnabled);
+		ImGui::Checkbox("Light Source 1 Enabled", &lightSourceEnabled[0]);
+		ImGui::Checkbox("Light Source 2 Enabled", &lightSourceEnabled[1]);
+		ImGui::Checkbox("Light Source 3 Enabled", &lightSourceEnabled[2]);
 
 		if (wireframeEnabled)
 		{
@@ -105,7 +108,7 @@ void ModelRenderer::display()
 	}
 
 	vec4 worldCameraPosition = inverseModelViewMatrix * vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	vec4 worldLightPosition = inverseModelLightMatrix * vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	vec4 worldLightPosition = inverseModelLightMatrix * vec4(m_lights.at(1), 1.0f);
 
 	shaderProgramModelBase->setUniform("modelViewProjectionMatrix", modelViewProjectionMatrix);
 	shaderProgramModelBase->setUniform("viewportSize", viewportSize);
@@ -145,7 +148,7 @@ void ModelRenderer::display()
 
 
 
-	if (lightSourceEnabled)
+	if (lightSourceEnabled[0]||lightSourceEnabled[1]||lightSourceEnabled[2])
 	{
 		auto shaderProgramModelLight = shaderProgram("model-light");
 		shaderProgramModelLight->setUniform("modelViewProjectionMatrix", modelViewProjectionMatrix * inverseModelLightMatrix);
@@ -159,7 +162,11 @@ void ModelRenderer::display()
 		m_lightArray->bind();
 
 		shaderProgramModelLight->use();
-		m_lightArray->drawArrays(GL_POINTS, 0, 1);
+		for (int i = 0; i < 3;i++) {
+			if (lightSourceEnabled[i]) {
+				m_lightArray->drawArrays(GL_POINTS, i, 1);
+			}
+		}
 		shaderProgramModelLight->release();
 
 		m_lightArray->unbind();
