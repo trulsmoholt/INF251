@@ -105,7 +105,7 @@ void ModelRenderer::display()
 	}
 
 	vec4 worldCameraPosition = inverseModelViewMatrix * vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	vec4 worldLightPosition = inverseModelLightMatrix * vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	vec4 worldLightPosition = inverseModelLightMatrix * vec4(1.0f, 0.0f, 0.0f, 1.0f);
 
 	shaderProgramModelBase->setUniform("modelViewProjectionMatrix", modelViewProjectionMatrix);
 	shaderProgramModelBase->setUniform("viewportSize", viewportSize);
@@ -131,7 +131,7 @@ void ModelRenderer::display()
 			}
 
 			viewer()->scene()->model()->vertexArray().drawElements(GL_TRIANGLES, groups.at(i).count(), GL_UNSIGNED_INT, (void*)(sizeof(GLuint)*groups.at(i).startIndex));
-
+	
 			if (material.diffuseTexture)
 			{
 				material.diffuseTexture->unbind();
@@ -142,6 +142,7 @@ void ModelRenderer::display()
 	shaderProgramModelBase->release();
 
 	viewer()->scene()->model()->vertexArray().unbind();
+
 
 
 	if (lightSourceEnabled)

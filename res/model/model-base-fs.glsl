@@ -21,13 +21,26 @@ out vec4 fragColor;
 
 void main()
 {
-	vec4 result = vec4(0.5,0.5,0.5,1.0);
+	float i = 0.5;
+	float ambient = 1;
+	float diffuse = 0.0002;
+	float specular = 0.0001;
+	float shininess = 0.001;
+
+	vec3 L = worldLightPosition - fragment.position;
+	vec3 R = 2*dot(L,fragment.normal)*fragment.normal-L;
+	vec3 V = worldCameraPosition - fragment.position;
+
+	float light = ambient*i + diffuse*dot(L,fragment.normal)*i + specular*pow(dot(R,V),shininess)*i;
+
+
+	vec4 result = vec4(light, light, light, 1.0);
 
 	if (wireframeEnabled)
 	{
-		float smallestDistance = min(min(fragment.edgeDistance[0],fragment.edgeDistance[1]),fragment.edgeDistance[2]);
-		float edgeIntensity = exp2(-1.0*smallestDistance*smallestDistance);
-		result.rgb = mix(result.rgb,wireframeLineColor.rgb,edgeIntensity*wireframeLineColor.a);
+		float smallestDistance = min(min(fragment.edgeDistance[0], fragment.edgeDistance[1]), fragment.edgeDistance[2]);
+		float edgeIntensity = exp2(-1.0 * smallestDistance * smallestDistance);
+		result.rgb = mix(result.rgb, wireframeLineColor.rgb, edgeIntensity * wireframeLineColor.a);
 	}
 
 	fragColor = result;

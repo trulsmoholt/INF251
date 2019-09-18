@@ -7,7 +7,7 @@
       "project": "CMakeLists.txt",
       "name": "minity.exe",
       "currentDir": "${projectDir}",
-      "program": "${command:cmake.launchTargetPath}"
+      "program": "${command:cmake.launchTargetPath}",
     },
   ]
 }
