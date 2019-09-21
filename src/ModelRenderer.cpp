@@ -22,7 +22,7 @@ using namespace globjects;
 
 ModelRenderer::ModelRenderer(Viewer* viewer) : Renderer(viewer)
 {
-	m_lights = { vec3(0.0f), vec3(0.5f),vec3(0.0f,0.25f,-0.3f) };
+	m_lights = { vec3(0.0f), vec3(0.0f,-1.0f,0.0f),vec3(0.0f,0.25f,-0.3f) };
 	m_lightVertices->setStorage(m_lights, GL_NONE_BIT);
 	auto lightVertexBinding = m_lightArray->binding(0);
 	lightVertexBinding->setBuffer(m_lightVertices.get(), 0, sizeof(vec3));
