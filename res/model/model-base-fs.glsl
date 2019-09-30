@@ -8,7 +8,14 @@ uniform vec3 diffuseColor;
 uniform sampler2D diffuseTexture;
 uniform bool wireframeEnabled;
 uniform vec4 wireframeLineColor;
+uniform bool worldLights[];
 
+uniform float diffuse;
+uniform float specular;
+uniform float shininess;
+
+uniform vec3 WorldLightPositions[];
+uniform bool WorldLights[];
 in fragmentData
 {
 	vec3 position;
@@ -19,31 +26,51 @@ in fragmentData
 
 out vec4 fragColor;
 
-void main()
-{
+vec3 phongShading(vec3 lightPos,float str){
+	
 	float i = 0.8;
 	float ambient = 0.3;
-	float diffuse = 0.3;
-	float specular = 0.5;
-	float shininess = 0.5;
 
-	vec3 L = normalize(worldLightPosition-fragment.position);
+	vec3 L = normalize(lightPos-fragment.position);
 	vec3 R = normalize(2*dot(L,fragment.normal)*fragment.normal-L);
 	vec3 V = normalize(worldCameraPosition - fragment.position);
 
 
 
-	float light =  clamp(diffuse*dot(L,fragment.normal)*i,0,1) + clamp(specular*pow(dot(R,V),shininess)*i,0,1);
+	float light =  str*clamp(diffuse*dot(L,fragment.normal)*i,0,1) + clamp(specular*pow(dot(R,V),shininess)*i,0,1);
 
+	return vec3(light, light, light);
+}
+void main()
+{
+vec3 result = vec3(0.0f);
+	if(WorldLights[1]){
+		result = result+phongShading(WorldLightPositions[1],0.5);
+	}
+	if(WorldLights[2]){
+		result = result+phongShading(WorldLightPositions[2],0.2);
+	}
+	if(WorldLights[0]){
+		result = result+phongShading(WorldLightPositions[0],0.2);
+	}
 
-	vec4 result = vec4(light, light, light, 1.0)+ambient*vec4(1.0);
 
 	if (wireframeEnabled)
 	{
 		float smallestDistance = min(min(fragment.edgeDistance[0], fragment.edgeDistance[1]), fragment.edgeDistance[2]);
 		float edgeIntensity = exp2(-1.0 * smallestDistance * smallestDistance);
 		result.rgb = mix(result.rgb, wireframeLineColor.rgb, edgeIntensity * wireframeLineColor.a);
+		result.rgb = phongShading(WorldLightPositions[1],0);
+			if(WorldLights[1]){
+					result = result+phongShading(WorldLightPositions[1],0.5);
+				}
+				if(WorldLights[2]){
+					result = result+phongShading(WorldLightPositions[2],0.2);
+				}
+				if(WorldLights[0]){
+					result = result+phongShading(WorldLightPositions[0],0.2);
+				}
 	}
 
-	fragColor = result;
+	fragColor = vec4(result,1.0);
 }

@@ -22,7 +22,7 @@ using namespace globjects;
 
 ModelRenderer::ModelRenderer(Viewer* viewer) : Renderer(viewer)
 {
-	m_lights = { vec3(0.0f), vec3(0.0f,-1.0f,0.0f),vec3(0.0f,0.25f,-0.3f) };
+	m_lights = { vec3(-0.7f,0.7f,2.0f), vec3(0.5f,0.0f,2.0f),vec3(0.0f,1.5f,-3.0f) };
 	m_lightVertices->setStorage(m_lights, GL_NONE_BIT);
 	auto lightVertexBinding = m_lightArray->binding(0);
 	lightVertexBinding->setBuffer(m_lightVertices.get(), 0, sizeof(vec3));
@@ -75,15 +75,18 @@ void ModelRenderer::display()
 
 	static std::vector<bool> groupEnabled(groups.size(), true);
 	static bool wireframeEnabled = true;
-	static bool lightSourceEnabled[3] = { false,true,false };
+	static bool lightSourceEnabled[3] = { true,true,true };
+	static bool enableIllumination;
+
+	static float diffuse=0.5;
+	static float specular=0.5;
+	static float shininess=20;
+	
 	static vec4 wireframeLineColor = vec4(1.0f);
 
 	if (ImGui::BeginMenu("Model"))
 	{
 		ImGui::Checkbox("Wireframe Enabled", &wireframeEnabled);
-		ImGui::Checkbox("Light Source 1 Enabled", &lightSourceEnabled[0]);
-		ImGui::Checkbox("Light Source 2 Enabled", &lightSourceEnabled[1]);
-		ImGui::Checkbox("Light Source 3 Enabled", &lightSourceEnabled[2]);
 
 		if (wireframeEnabled)
 		{
@@ -103,12 +106,31 @@ void ModelRenderer::display()
 			}
 
 		}
-
+		if (ImGui::CollapsingHeader("Illumination"))
+		{
+			ImGui::Checkbox("Enable illumination", &enableIllumination);
+			ImGui::Checkbox("key light", &lightSourceEnabled[0]);
+			ImGui::Checkbox("fill light", &lightSourceEnabled[1]);
+			ImGui::Checkbox("back light", &lightSourceEnabled[2]);
+			ImGui::SliderFloat("difuse", &diffuse, 0.0f, 1.0f);
+			ImGui::SliderFloat("specular", &specular, 0.0f, 1.0f);
+			ImGui::SliderFloat("shiness", &shininess, 0.0f, 50.0f);
+		}
 		ImGui::EndMenu();
 	}
 
 	vec4 worldCameraPosition = inverseModelViewMatrix * vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	vec4 worldLightPosition = inverseModelLightMatrix * vec4(m_lights.at(1), 1.0f);
+	
+	std::vector <glm::vec3> worldLights;
+	std::vector <bool> lightEnabled;
+	for (vec3 v : m_lights) {
+		vec4 a = inverseModelLightMatrix * vec4(v, 1.0f);
+		worldLights.push_back(vec3(a));
+	}
+	for (int i = 0; i < 3; i++) {
+		lightEnabled.push_back(lightSourceEnabled[i]);
+	}
 
 	shaderProgramModelBase->setUniform("modelViewProjectionMatrix", modelViewProjectionMatrix);
 	shaderProgramModelBase->setUniform("viewportSize", viewportSize);
@@ -116,7 +138,14 @@ void ModelRenderer::display()
 	shaderProgramModelBase->setUniform("worldLightPosition", vec3(worldLightPosition));
 	shaderProgramModelBase->setUniform("wireframeEnabled", wireframeEnabled);
 	shaderProgramModelBase->setUniform("wireframeLineColor", wireframeLineColor);
-	
+
+	shaderProgramModelBase->setUniform("diffuse", diffuse);
+	shaderProgramModelBase->setUniform("specular", specular);
+	shaderProgramModelBase->setUniform("shininess", shininess);
+
+	shaderProgramModelBase->setUniform("WorldLightPositions", worldLights);
+	shaderProgramModelBase->setUniform("WorldLights", lightEnabled);
+
 	shaderProgramModelBase->use();
 
 	for (uint i = 0; i < groups.size(); i++)
@@ -141,7 +170,6 @@ void ModelRenderer::display()
 			}
 		}
 	}
-
 	shaderProgramModelBase->release();
 
 	viewer()->scene()->model()->vertexArray().unbind();
