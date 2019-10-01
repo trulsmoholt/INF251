@@ -28,18 +28,18 @@ out vec4 fragColor;
 
 vec3 phongShading(vec3 lightPos,float str){
 	
-	float i = 0.8;
+	vec3 i = vec3(0.8);
 	float ambient = 0.3;
 
 	vec3 L = normalize(lightPos-fragment.position);
 	vec3 R = normalize(2*dot(L,fragment.normal)*fragment.normal-L);
 	vec3 V = normalize(worldCameraPosition - fragment.position);
 
+	vec3 ambientLight = vec3(texture(diffuseTexture,fragment.texCoord));
 
+	vec3 light =  str*clamp(diffuse*dot(L,fragment.normal)*ambientLight,0,1) + clamp(specular*pow(dot(R,V),shininess)*i,0,1);
 
-	float light =  str*clamp(diffuse*dot(L,fragment.normal)*i,0,1) + clamp(specular*pow(dot(R,V),shininess)*i,0,1);
-
-	return vec3(light, light, light);
+	return light;
 }
 void main()
 {
