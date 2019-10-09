@@ -155,6 +155,7 @@ void ModelRenderer::display()
 			const Material & material = materials.at(groups.at(i).materialIndex);
 
 			shaderProgramModelBase->setUniform("diffuseColor", material.diffuse);
+			shaderProgramModelBase->setUniform("materialSpecular", material.specular);
 
 			if (material.diffuseTexture)
 			{

@@ -5,10 +5,12 @@
 uniform vec3 worldCameraPosition;
 uniform vec3 worldLightPosition;
 uniform vec3 diffuseColor;
+uniform vec3 materialSpecular;
 uniform sampler2D diffuseTexture;
 uniform sampler2D specularTexture;
 uniform sampler2D shininessTexture;
 uniform sampler2D bumpTexture;
+
 
 uniform bool wireframeEnabled;
 uniform vec4 wireframeLineColor;
@@ -40,6 +42,15 @@ vec3 bumpmap(float alpha, float beta){
 	float cosv = cos(beta*fragment.texCoord.y);
 	return normalize(fragment.normal + 2*alpha*beta*sinu*cosu*pow(sinv,2)*t+2*alpha*beta*sinv*cosv*pow(sinu,2)*b);
 }
+vec3 bumpmap2(float alpha, float beta){
+	vec3 t = normalize(fragment.TBN[0]);
+	vec3 b = normalize(fragment.TBN[1]);
+	float sinu = sin(beta*fragment.texCoord.x);
+	float sinv = sin(beta*fragment.texCoord.y);
+	float cosu = cos(beta*fragment.texCoord.x);
+	float cosv = cos(beta*fragment.texCoord.y);
+	return normalize(fragment.normal + 2*alpha*sinu*t+2*alpha*sinv*b);
+}
 
 
 
@@ -49,7 +60,7 @@ vec3 phongShading(vec3 lightPos,float str){
 	
 	vec3 i = vec3(0.8);
 	float ambient = 0.3;
-	vec3 normal = bumpmap(0.5,100);
+	vec3 normal = bumpmap2(0.01,1000);
 
 	vec3 L = normalize(lightPos-fragment.position);
 	vec3 R = normalize(2*dot(L,normal)*normal-L);
