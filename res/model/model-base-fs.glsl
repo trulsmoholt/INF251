@@ -30,14 +30,15 @@ vec3 phongShading(vec3 lightPos,float str){
 	
 	vec3 i = vec3(0.8);
 	float ambient = 0.3;
+	vec3 normal = clamp(fragment.normal,0,1);
 
 	vec3 L = normalize(lightPos-fragment.position);
-	vec3 R = normalize(2*dot(L,fragment.normal)*fragment.normal-L);
+	vec3 R = normalize(2*dot(L,normal)*normal-L);
 	vec3 V = normalize(worldCameraPosition - fragment.position);
 
 	vec3 ambientLight = vec3(texture(diffuseTexture,fragment.texCoord));
 
-	vec3 light =  str*clamp(diffuse*dot(L,fragment.normal)*ambientLight,0,1) + clamp(specular*pow(dot(R,V),shininess)*i,0,1);
+	vec3 light =  str*clamp(diffuse*dot(L,normal)*ambientLight,0,1) + clamp(specular*pow(dot(R,V),shininess)*i,0,1);
 
 	return light;
 }
@@ -60,16 +61,6 @@ vec3 result = vec3(0.0f);
 		float smallestDistance = min(min(fragment.edgeDistance[0], fragment.edgeDistance[1]), fragment.edgeDistance[2]);
 		float edgeIntensity = exp2(-1.0 * smallestDistance * smallestDistance);
 		result.rgb = mix(result.rgb, wireframeLineColor.rgb, edgeIntensity * wireframeLineColor.a);
-		result.rgb = phongShading(WorldLightPositions[1],0);
-			if(WorldLights[1]){
-					result = result+phongShading(WorldLightPositions[1],0.5);
-				}
-				if(WorldLights[2]){
-					result = result+phongShading(WorldLightPositions[2],0.2);
-				}
-				if(WorldLights[0]){
-					result = result+phongShading(WorldLightPositions[0],0.2);
-				}
 	}
 
 	fragColor = vec4(result,1.0);

@@ -24,6 +24,7 @@ out fragmentData
 
 void main(void)
 {
+
 	vec2 p[3];
 	vec2 v[3];
 
