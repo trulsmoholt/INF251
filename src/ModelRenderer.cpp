@@ -162,11 +162,41 @@ void ModelRenderer::display()
 				material.diffuseTexture->bindActive(0);
 			}
 
+			if (material.specularTexture)
+			{
+				shaderProgramModelBase->setUniform("specularTexture", 0);
+				material.specularTexture->bindActive(0);
+			}
+
+			if (material.shininessTexture)
+			{
+				shaderProgramModelBase->setUniform("shininessTexture", 0);
+				material.shininessTexture->bindActive(0);
+			}
+			if (material.bumpTexture)
+			{
+				shaderProgramModelBase->setUniform("bumpTexture", 0);
+				material.bumpTexture->bindActive(0);
+			}
+
 			viewer()->scene()->model()->vertexArray().drawElements(GL_TRIANGLES, groups.at(i).count(), GL_UNSIGNED_INT, (void*)(sizeof(GLuint)*groups.at(i).startIndex));
 	
 			if (material.diffuseTexture)
 			{
 				material.diffuseTexture->unbind();
+			}
+			if (material.specularTexture)
+			{
+				material.specularTexture->unbind();
+			}
+
+			if (material.shininessTexture)
+			{
+				material.shininessTexture->unbind();
+			}
+			if (material.bumpTexture)
+			{
+				material.bumpTexture->unbind();
 			}
 		}
 	}

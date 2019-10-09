@@ -6,6 +6,10 @@ uniform vec3 worldCameraPosition;
 uniform vec3 worldLightPosition;
 uniform vec3 diffuseColor;
 uniform sampler2D diffuseTexture;
+uniform sampler2D specularTexture;
+uniform sampler2D shininessTexture;
+uniform sampler2D bumpTexture;
+
 uniform bool wireframeEnabled;
 uniform vec4 wireframeLineColor;
 uniform bool worldLights[];
@@ -22,23 +26,38 @@ in fragmentData
 	vec3 normal;
 	vec2 texCoord;
 	noperspective vec3 edgeDistance;
+	mat3 TBN;
 } fragment;
 
 out vec4 fragColor;
+
+vec3 bumpmap(float alpha, float beta){
+	vec3 t = normalize(fragment.TBN[0]);
+	vec3 b = normalize(fragment.TBN[1]);
+	float sinu = sin(beta*fragment.texCoord.x);
+	float sinv = sin(beta*fragment.texCoord.y);
+	float cosu = cos(beta*fragment.texCoord.x);
+	float cosv = cos(beta*fragment.texCoord.y);
+	return normalize(fragment.normal + 2*alpha*beta*sinu*cosu*pow(sinv,2)*t+2*alpha*beta*sinv*cosv*pow(sinu,2)*b);
+}
+
+
+
+
 
 vec3 phongShading(vec3 lightPos,float str){
 	
 	vec3 i = vec3(0.8);
 	float ambient = 0.3;
-	vec3 normal = clamp(fragment.normal,0,1);
+	vec3 normal = bumpmap(0.5,100);
 
 	vec3 L = normalize(lightPos-fragment.position);
 	vec3 R = normalize(2*dot(L,normal)*normal-L);
 	vec3 V = normalize(worldCameraPosition - fragment.position);
 
-	vec3 ambientLight = vec3(texture(diffuseTexture,fragment.texCoord));
-
-	vec3 light =  str*clamp(diffuse*dot(L,normal)*ambientLight,0,1) + clamp(specular*pow(dot(R,V),shininess)*i,0,1);
+	vec3 Kd = vec3(texture(diffuseTexture,fragment.texCoord));
+	vec3 Ks = vec3(texture(specularTexture,fragment.texCoord));
+	vec3 light =  str*clamp(diffuse*dot(L,normal)*Kd,0,1) + clamp(specular*Ks*pow(dot(R,V),shininess)*i,0,1);
 
 	return light;
 }
