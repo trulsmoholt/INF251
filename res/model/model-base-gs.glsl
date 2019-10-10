@@ -21,6 +21,9 @@ out fragmentData
 	vec2 texCoord;
 	noperspective vec3 edgeDistance;
 	mat3 TBN;
+	vec3 T;
+	vec3 B;
+	vec3 N;
 } fragment;
 
 void main(void)
@@ -41,6 +44,10 @@ void main(void)
 	vec3 normal = cross(tangent,bitangent);
 	mat3 TBN = mat3(tangent,bitangent,normal);
 	fragment.TBN = TBN;
+	fragment.T = tangent;
+	fragment.B = bitangent;
+	fragment.N = normal;
+
 
 
 	vec2 p[3];

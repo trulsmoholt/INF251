@@ -28,6 +28,9 @@ in fragmentData
 	vec3 normal;
 	vec2 texCoord;
 	noperspective vec3 edgeDistance;
+	vec3 T;
+	vec3 B;
+	vec3 N;
 	mat3 TBN;
 } fragment;
 
@@ -51,6 +54,14 @@ vec3 bumpmap2(float alpha, float beta){
 	float cosv = cos(beta*fragment.texCoord.y);
 	return normalize(fragment.normal + 2*alpha*sinu*t+2*alpha*sinv*b);
 }
+vec3 bumpmap3(){
+	vec3 t = normalize(fragment.TBN[0]);
+	vec3 b = normalize(fragment.TBN[1]);
+	vec3 n = normalize(fragment.TBN[2]);
+	mat3 TBN = mat3(t,b,n);
+	vec3 nn = normalize(fragment.normal + vec3(texture(bumpTexture,fragment.texCoord)));
+	return TBN*nn;
+}
 
 
 
@@ -60,7 +71,7 @@ vec3 phongShading(vec3 lightPos,float str){
 	
 	vec3 i = vec3(0.8);
 	float ambient = 0.3;
-	vec3 normal = bumpmap2(0.01,1000);
+	vec3 normal = bumpmap3();
 
 	vec3 L = normalize(lightPos-fragment.position);
 	vec3 R = normalize(2*dot(L,normal)*normal-L);
