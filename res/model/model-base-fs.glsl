@@ -32,9 +32,6 @@ in fragmentData
 	vec2 texCoord;
 	noperspective vec3 edgeDistance;
 	mat3 TBN;
-	vec3 T;
-	vec3 B;
-	vec3 N;
 } fragment;
 
 out vec4 fragColor;
@@ -68,14 +65,7 @@ vec3 bumpmapTexture(){
 	return nn;
 }
 
-
-
-
-
 vec3 phongShading(vec3 lightPos,float str){
-	
-	vec3 i = vec3(0.8);
-	float ambient = 0.3;
 	vec3 normal;
 	if(normalMapping==2){
 		normal=bumpmapTexture();
@@ -92,7 +82,7 @@ vec3 phongShading(vec3 lightPos,float str){
 
 	vec3 Kd = vec3(texture(diffuseTexture,fragment.texCoord));
 	vec3 Ks = vec3(texture(specularTexture,fragment.texCoord));
-	vec3 light =  str*clamp(diffuse*dot(L,normal)*Kd,0,1) + clamp(specular*Ks*pow(dot(R,V),shininess)*i,0,1);
+	vec3 light =  str*clamp(diffuse*dot(L,normal)*Kd,0,1) + clamp(specular*Ks*pow(dot(R,V),shininess),0,1);
 
 	return light;
 }

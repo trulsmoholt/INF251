@@ -37,6 +37,13 @@ ModelRenderer::ModelRenderer(Viewer* viewer) : Renderer(viewer)
 		}, 
 		{ "./res/model/model-globals.glsl" });
 
+	createShaderProgram("tangent-base", {
+		{ GL_VERTEX_SHADER,"./res/model/tangent-base-vs.glsl" },
+		{ GL_GEOMETRY_SHADER,"./res/model/tangent-base-gs.glsl" },
+		{ GL_FRAGMENT_SHADER,"./res/model/tangent-base-fs.glsl" },
+		},
+		{ "./res/model/model-globals.glsl" });
+
 	createShaderProgram("model-light", {
 		{ GL_VERTEX_SHADER,"./res/model/model-light-vs.glsl" },
 		{ GL_FRAGMENT_SHADER,"./res/model/model-light-fs.glsl" },
@@ -78,6 +85,7 @@ void ModelRenderer::display()
 	static bool lightSourceEnabled[3] = { true,true,true };
 	static bool enableIllumination;
 	static int normalMapping = 0;
+	static bool tangentSpace;
 
 	static float diffuse=0.5;
 	static float specular=0.5;
@@ -120,20 +128,26 @@ void ModelRenderer::display()
 				ImGui::RadioButton("No normal mapping", &normalMapping, 0);
 				ImGui::RadioButton("Procedural bumpmapping", &normalMapping, 1);
 				ImGui::RadioButton("Bumpmap texture", &normalMapping, 2);
+				ImGui::Checkbox("Tangentspace light computation", &tangentSpace);
 
 			}
 		}
 		ImGui::EndMenu();
 	}
 
-	vec4 worldCameraPosition = inverseModelViewMatrix * vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	vec4 worldLightPosition = inverseModelLightMatrix * vec4(m_lights.at(1), 1.0f);
+	if (tangentSpace) {
+		auto shaderProgramModelBase = shaderProgram("tangent-base");
+	}
+
+
+	vec4 objectCameraPosition = inverseModelViewMatrix * vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	vec4 LightPosition = inverseModelLightMatrix * vec4(m_lights.at(1), 1.0f);
 	
-	std::vector <glm::vec3> worldLights;
+	std::vector <glm::vec3> objectLights;
 	std::vector <bool> lightEnabled;
 	for (vec3 v : m_lights) {
 		vec4 a = inverseModelLightMatrix * vec4(v, 1.0f);
-		worldLights.push_back(vec3(a));
+		objectLights.push_back(vec3(a));
 	}
 	for (int i = 0; i < 3; i++) {
 		lightEnabled.push_back(lightSourceEnabled[i]);
@@ -141,8 +155,8 @@ void ModelRenderer::display()
 
 	shaderProgramModelBase->setUniform("modelViewProjectionMatrix", modelViewProjectionMatrix);
 	shaderProgramModelBase->setUniform("viewportSize", viewportSize);
-	shaderProgramModelBase->setUniform("worldCameraPosition", vec3(worldCameraPosition));
-	shaderProgramModelBase->setUniform("worldLightPosition", vec3(worldLightPosition));
+	shaderProgramModelBase->setUniform("worldCameraPosition", vec3(objectCameraPosition));
+	shaderProgramModelBase->setUniform("worldLightPosition", vec3(LightPosition));
 	shaderProgramModelBase->setUniform("wireframeEnabled", wireframeEnabled);
 	shaderProgramModelBase->setUniform("wireframeLineColor", wireframeLineColor);
 
@@ -152,7 +166,7 @@ void ModelRenderer::display()
 
 	shaderProgramModelBase->setUniform("normalMapping", normalMapping);
 
-	shaderProgramModelBase->setUniform("WorldLightPositions", worldLights);
+	shaderProgramModelBase->setUniform("WorldLightPositions", objectLights);
 	shaderProgramModelBase->setUniform("WorldLights", lightEnabled);
 
 	shaderProgramModelBase->use();
