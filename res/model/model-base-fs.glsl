@@ -28,10 +28,10 @@ in fragmentData
 	vec3 normal;
 	vec2 texCoord;
 	noperspective vec3 edgeDistance;
+	mat3 TBN;
 	vec3 T;
 	vec3 B;
 	vec3 N;
-	mat3 TBN;
 } fragment;
 
 out vec4 fragColor;
@@ -55,12 +55,12 @@ vec3 bumpmap2(float alpha, float beta){
 	return normalize(fragment.normal + 2*alpha*sinu*t+2*alpha*sinv*b);
 }
 vec3 bumpmap3(){
-	vec3 t = normalize(fragment.TBN[0]);
-	vec3 b = normalize(fragment.TBN[1]);
-	vec3 n = normalize(fragment.TBN[2]);
+	vec3 t = fragment.TBN[0];
+	vec3 b = fragment.TBN[1];
+	vec3 n = fragment.TBN[2];
 	mat3 TBN = mat3(t,b,n);
-	vec3 nn = normalize(fragment.normal + vec3(texture(bumpTexture,fragment.texCoord)));
-	return TBN*nn;
+	vec3 nn = TBN*normalize(texture(bumpTexture,fragment.texCoord).xyz*2.0-1.0);
+	return nn;
 }
 
 

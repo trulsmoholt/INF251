@@ -42,7 +42,7 @@ void main(void)
 	bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
 	bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
 	vec3 normal = cross(tangent,bitangent);
-	mat3 TBN = mat3(tangent,bitangent,normal);
+	mat3 TBN = mat3(normalize(tangent),normalize(bitangent),normalize(normal));
 	fragment.TBN = TBN;
 	fragment.T = tangent;
 	fragment.B = bitangent;
