@@ -12,6 +12,7 @@ uniform sampler2D shininessTexture;
 uniform sampler2D bumpTexture;
 
 
+
 uniform bool wireframeEnabled;
 uniform vec4 wireframeLineColor;
 uniform bool worldLights[];
@@ -19,6 +20,8 @@ uniform bool worldLights[];
 uniform float diffuse;
 uniform float specular;
 uniform float shininess;
+uniform int normalMapping;
+
 
 uniform vec3 WorldLightPositions[];
 uniform bool WorldLights[];
@@ -46,18 +49,20 @@ vec3 bumpmap(float alpha, float beta){
 	return normalize(fragment.normal + 2*alpha*beta*sinu*cosu*pow(sinv,2)*t+2*alpha*beta*sinv*cosv*pow(sinu,2)*b);
 }
 vec3 bumpmap2(float alpha, float beta){
-	vec3 t = normalize(fragment.TBN[0]);
-	vec3 b = normalize(fragment.TBN[1]);
+	vec3 n = (dot(fragment.TBN[2],fragment.normal)/dot(fragment.normal,fragment.normal))*fragment.normal;
+	vec3 b = cross(n,fragment.TBN[0]);
+	vec3 t = cross(b,n);
+	mat3 TBN = mat3(t,b,n);
 	float sinu = sin(beta*fragment.texCoord.x);
 	float sinv = sin(beta*fragment.texCoord.y);
 	float cosu = cos(beta*fragment.texCoord.x);
 	float cosv = cos(beta*fragment.texCoord.y);
 	return normalize(fragment.normal + 2*alpha*sinu*t+2*alpha*sinv*b);
 }
-vec3 bumpmap3(){
-	vec3 t = fragment.TBN[0];
-	vec3 b = fragment.TBN[1];
-	vec3 n = fragment.TBN[2];
+vec3 bumpmapTexture(){
+	vec3 n = (dot(fragment.TBN[2],fragment.normal)/dot(fragment.normal,fragment.normal))*fragment.normal;
+	vec3 b = cross(n,fragment.TBN[0]);
+	vec3 t = cross(b,n);
 	mat3 TBN = mat3(t,b,n);
 	vec3 nn = TBN*normalize(texture(bumpTexture,fragment.texCoord).xyz*2.0-1.0);
 	return nn;
@@ -71,7 +76,15 @@ vec3 phongShading(vec3 lightPos,float str){
 	
 	vec3 i = vec3(0.8);
 	float ambient = 0.3;
-	vec3 normal = bumpmap3();
+	vec3 normal;
+	if(normalMapping==2){
+		normal=bumpmapTexture();
+	}else if(normalMapping==0){
+		normal = normalize(fragment.normal);
+	}
+	else{
+		normal = bumpmap2(0.05,1000);
+	}
 
 	vec3 L = normalize(lightPos-fragment.position);
 	vec3 R = normalize(2*dot(L,normal)*normal-L);

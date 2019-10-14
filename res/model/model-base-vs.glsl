@@ -17,6 +17,7 @@ out vertexData
 
 void main()
 {
+
 	vec4 pos = modelViewProjectionMatrix*vec4(position,1.0);
 
 	vertex.position = position; 

@@ -77,6 +77,7 @@ void ModelRenderer::display()
 	static bool wireframeEnabled = true;
 	static bool lightSourceEnabled[3] = { true,true,true };
 	static bool enableIllumination;
+	static int normalMapping = 0;
 
 	static float diffuse=0.5;
 	static float specular=0.5;
@@ -115,6 +116,12 @@ void ModelRenderer::display()
 			ImGui::SliderFloat("difuse", &diffuse, 0.0f, 1.0f);
 			ImGui::SliderFloat("specular", &specular, 0.0f, 1.0f);
 			ImGui::SliderFloat("shiness", &shininess, 0.0f, 50.0f);
+			if(ImGui::CollapsingHeader("normal mapping")){
+				ImGui::RadioButton("No normal mapping", &normalMapping, 0);
+				ImGui::RadioButton("Procedural bumpmapping", &normalMapping, 1);
+				ImGui::RadioButton("Bumpmap texture", &normalMapping, 2);
+
+			}
 		}
 		ImGui::EndMenu();
 	}
@@ -142,6 +149,8 @@ void ModelRenderer::display()
 	shaderProgramModelBase->setUniform("diffuse", diffuse);
 	shaderProgramModelBase->setUniform("specular", specular);
 	shaderProgramModelBase->setUniform("shininess", shininess);
+
+	shaderProgramModelBase->setUniform("normalMapping", normalMapping);
 
 	shaderProgramModelBase->setUniform("WorldLightPositions", worldLights);
 	shaderProgramModelBase->setUniform("WorldLights", lightEnabled);
