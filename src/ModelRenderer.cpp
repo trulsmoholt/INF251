@@ -9,6 +9,9 @@
 #include "Model.h"
 #include <sstream>
 
+#include <glm/glm.hpp>
+
+
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -69,6 +72,7 @@ void ModelRenderer::display()
 	const mat3 normalMatrix = mat3(transpose(inverseModelViewMatrix));
 	const mat3 inverseNormalMatrix = inverse(normalMatrix);
 	const vec2 viewportSize = viewer()->viewportSize();
+	const mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
 
 	auto shaderProgramModelBase = shaderProgram("model-base");
 
@@ -90,6 +94,8 @@ void ModelRenderer::display()
 	static float diffuse=0.5;
 	static float specular=0.5;
 	static float shininess=20;
+
+	static float exploaded = 0.0;
 	
 	static vec4 wireframeLineColor = vec4(1.0f);
 
@@ -107,6 +113,7 @@ void ModelRenderer::display()
 
 		if (ImGui::CollapsingHeader("Groups"))
 		{
+			ImGui::SliderFloat("exploaded", &exploaded, 0.0f, 0.3f);
 			for (uint i = 0; i < groups.size(); i++)
 			{
 				bool checked = groupEnabled.at(i);
@@ -164,12 +171,14 @@ void ModelRenderer::display()
 	shaderProgramModelBase->setUniform("specular", specular);
 	shaderProgramModelBase->setUniform("shininess", shininess);
 
+
 	shaderProgramModelBase->setUniform("normalMapping", normalMapping);
 
 	shaderProgramModelBase->setUniform("WorldLightPositions", objectLights);
 	shaderProgramModelBase->setUniform("WorldLights", lightEnabled);
 
 	shaderProgramModelBase->use();
+	mat4 &groupTranslate = mat4(1.0f);
 
 	for (uint i = 0; i < groups.size(); i++)
 	{
@@ -179,6 +188,14 @@ void ModelRenderer::display()
 
 			shaderProgramModelBase->setUniform("diffuseColor", material.diffuse);
 			shaderProgramModelBase->setUniform("materialSpecular", material.specular);
+			vec4 v = vec4((groups.at(i).maxPoint - groups.at(i).maxPoint),1.0f);
+			const mat4 model = viewer()->modelTransform();
+
+
+
+			groupTranslate = translate(groupTranslate,(groups.at(i).center)* exploaded);
+			shaderProgramModelBase->setUniform("groupTranslate", groupTranslate);
+
 
 			if (material.diffuseTexture)
 			{
@@ -202,7 +219,6 @@ void ModelRenderer::display()
 				shaderProgramModelBase->setUniform("bumpTexture", 3);
 				material.bumpTexture->bindActive(3);
 			}
-
 			viewer()->scene()->model()->vertexArray().drawElements(GL_TRIANGLES, groups.at(i).count(), GL_UNSIGNED_INT, (void*)(sizeof(GLuint)*groups.at(i).startIndex));
 	
 			if (material.diffuseTexture)
@@ -257,6 +273,8 @@ void ModelRenderer::display()
 		glDisable(GL_BLEND);
 		glDepthMask(GL_TRUE);
 	}
+
+
 
 	// Restore OpenGL state (disabled to to issues with some Intel drivers)
 	// currentState->apply();

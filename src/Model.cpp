@@ -964,6 +964,20 @@ void Model::load(const std::string& filename)
 	{
 		globjects::debug() << "Error loading << " << filename << "!";
 	}
+	vec3 b, minb = vec3(0.0f);
+	for (auto &g : m_groups) {
+		for (int i = g.startIndex; i < g.endIndex; i++) {
+			int j = m_indices.at(i);
+			if (i == g.startIndex) {
+				g.maxPoint = m_vertices.at(j).position;
+				g.minPoint = m_vertices.at(j).position;
+			}
+			g.maxPoint = max(g.maxPoint, m_vertices.at(j).position);
+			g.minPoint = min(g.minPoint, m_vertices.at(j).position);
+			b = b + m_vertices.at(j).position;
+		}
+		g.center = ((g.maxPoint+g.minPoint)-(m_maximumBounds+m_minimumBounds))*3.0f;
+	}
 }
 
 const std::string & Model::filename() const
