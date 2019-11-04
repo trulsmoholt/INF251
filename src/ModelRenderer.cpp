@@ -99,12 +99,11 @@ void ModelRenderer::display()
 	static float diffuse=0.5;
 	static float specular=0.5;
 	static float shininess=20;
-	std::chrono::high_resolution_clock::time_point t1;
 	float timeDiff=0.0f;
 
 	static float exploaded = 0.0;
 
-	static float exploadedCP[2];
+	static float interpolationTime[2];
 
 	static bool animationEnabled = false;
 	
@@ -134,13 +133,13 @@ void ModelRenderer::display()
 
 		}
 		if (ImGui::CollapsingHeader("Animation")) {
-			ImGui::SliderFloat("cp1", &exploadedCP[0], 0.0f, 3000.0f);
+			ImGui::SliderFloat("cp1", &interpolationTime[0], 0.0f, 3000.0f);
 			if (ImGui::Button("Save CP1", ImVec2(100, 50))) {
-				m_controlPoints.insert(m_controlPoints.begin(),ControlPoint{ exploadedCP[0],exploaded });
+				m_controlPoints.insert(m_controlPoints.begin(),ControlPoint{ interpolationTime[0],exploaded });
 			}
-			ImGui::SliderFloat("cp2", &exploadedCP[1], 0.0f, 3000.0f);
+			ImGui::SliderFloat("cp2", &interpolationTime[1], 0.0f, 3000.0f);
 			if (ImGui::Button("Save CP2",ImVec2(100,50))) {
-				m_controlPoints.insert(m_controlPoints.begin()+1,ControlPoint{ exploadedCP[1],exploaded });
+				m_controlPoints.insert(m_controlPoints.begin()+1,ControlPoint{ interpolationTime[1],exploaded });
 			}
 			if (ImGui::Button("Run animation", ImVec2(100, 50))) {
 				animationEnabled = true;
@@ -210,7 +209,6 @@ void ModelRenderer::display()
 		ControlPoint cp = { 0.0f,0.0f };
 		interpolateScalar(d.count(), m_controlPoints, cp, 3000.0f);
 		exploaded = cp.exploadedView;
-		globjects::debug() << exploaded;
 		if (d.count() > 3000.0f) {
 			animationEnabled = false;
 		}
