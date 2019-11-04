@@ -8,8 +8,10 @@
 #include "Scene.h"
 #include "Model.h"
 #include <sstream>
+#include <ctime>
 
 #include <glm/glm.hpp>
+#include <chrono>
 
 
 #include <glm/gtc/type_ptr.hpp>
@@ -17,11 +19,14 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
+#include <Windows.h>
 
 using namespace minity;
 using namespace gl;
 using namespace glm;
 using namespace globjects;
+using Clock = std::chrono::high_resolution_clock;
+using TimePoint = std::chrono::time_point<Clock>;
 
 ModelRenderer::ModelRenderer(Viewer* viewer) : Renderer(viewer)
 {
@@ -94,8 +99,14 @@ void ModelRenderer::display()
 	static float diffuse=0.5;
 	static float specular=0.5;
 	static float shininess=20;
+	std::chrono::high_resolution_clock::time_point t1;
+	float timeDiff=0.0f;
 
 	static float exploaded = 0.0;
+
+	static float exploadedCP[2];
+
+	static bool animationEnabled = false;
 	
 	static vec4 wireframeLineColor = vec4(1.0f);
 
@@ -122,6 +133,21 @@ void ModelRenderer::display()
 			}
 
 		}
+		if (ImGui::CollapsingHeader("Animation")) {
+			ImGui::SliderFloat("cp1", &exploadedCP[0], 0.0f, 3000.0f);
+			if (ImGui::Button("Save CP1", ImVec2(100, 50))) {
+				m_controlPoints.insert(m_controlPoints.begin(),ControlPoint{ exploadedCP[0],exploaded });
+			}
+			ImGui::SliderFloat("cp2", &exploadedCP[1], 0.0f, 3000.0f);
+			if (ImGui::Button("Save CP2",ImVec2(100,50))) {
+				m_controlPoints.insert(m_controlPoints.begin()+1,ControlPoint{ exploadedCP[1],exploaded });
+			}
+			if (ImGui::Button("Run animation", ImVec2(100, 50))) {
+				animationEnabled = true;
+				m_startTime = Clock::now();
+				exploaded = 0.0f;
+			}
+		}
 		if (ImGui::CollapsingHeader("Illumination"))
 		{
 			ImGui::Checkbox("Enable illumination", &enableIllumination);
@@ -136,7 +162,6 @@ void ModelRenderer::display()
 				ImGui::RadioButton("Procedural bumpmapping", &normalMapping, 1);
 				ImGui::RadioButton("Bumpmap texture", &normalMapping, 2);
 				ImGui::Checkbox("Tangentspace light computation", &tangentSpace);
-
 			}
 		}
 		ImGui::EndMenu();
@@ -178,8 +203,19 @@ void ModelRenderer::display()
 	shaderProgramModelBase->setUniform("WorldLights", lightEnabled);
 
 	shaderProgramModelBase->use();
-	mat4 &groupTranslate = mat4(1.0f);
 
+	if (animationEnabled) {
+		TimePoint t = Clock::now();
+		std::chrono::duration<float, std::milli> d =  t-m_startTime;
+		ControlPoint cp = { 0.0f,0.0f };
+		interpolateScalar(d.count(), m_controlPoints, cp, 3000.0f);
+		exploaded = cp.exploadedView;
+		globjects::debug() << exploaded;
+		if (d.count() > 3000.0f) {
+			animationEnabled = false;
+		}
+	}
+	mat4 &groupTranslate = mat4(1.0f);
 	for (uint i = 0; i < groups.size(); i++)
 	{
 		if (groupEnabled.at(i))
@@ -190,7 +226,6 @@ void ModelRenderer::display()
 			shaderProgramModelBase->setUniform("materialSpecular", material.specular);
 			vec4 v = vec4((groups.at(i).maxPoint - groups.at(i).maxPoint),1.0f);
 			const mat4 model = viewer()->modelTransform();
-
 
 
 			groupTranslate = translate(groupTranslate,(groups.at(i).center)* exploaded);
@@ -278,4 +313,18 @@ void ModelRenderer::display()
 
 	// Restore OpenGL state (disabled to to issues with some Intel drivers)
 	// currentState->apply();
+}
+
+void minity::ModelRenderer::interpolateVector(float t, const glm::vec3& p1, const glm::vec3 p2, glm::vec3& np)
+{
+	
+}
+
+void minity::ModelRenderer::interpolateScalar(float t, std::vector<minity::ControlPoint> &controlPoints, ControlPoint &output, float tspan)
+{
+	float ct = controlPoints.at(1).time - controlPoints.at(0).time;
+	t = t / ct;
+	float v1 = (1-t) * controlPoints.at(0).exploadedView;
+	float v2 = t * controlPoints.at(1).exploadedView;
+	output.exploadedView = v1 + v2;
 }
